@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for the First Responder Dashboard */
+@layer base {
+  html {
+    font-family: system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .risk-indicator {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .risk-low {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .risk-medium {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+  
+  .risk-high {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors;
+  }
+  
+  .alert-banner {
+    @apply p-4 rounded-md border-l-4 font-medium;
+  }
+  
+  .alert-info {
+    @apply bg-blue-50 border-blue-400 text-blue-700;
+  }
+  
+  .alert-warning {
+    @apply bg-yellow-50 border-yellow-400 text-yellow-700;
+  }
+  
+  .alert-error {
+    @apply bg-red-50 border-red-400 text-red-700;
+  }
+}
+
+/* Leaflet map styles */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 0.5rem;
+}
+
+/* Custom marker styles */
+.risk-marker {
+  @apply w-4 h-4 rounded-full border-2 border-white shadow-lg;
+}
+
+.risk-marker.low {
+  @apply bg-green-500;
+}
+
+.risk-marker.medium {
+  @apply bg-yellow-500;
+}
+
+.risk-marker.high {
+  @apply bg-red-500 animate-pulse;
+}
+
+/* Loading animations */
+.loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600;
+}
+
+.pulse-dot {
+  @apply w-2 h-2 bg-current rounded-full animate-pulse;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-grid {
+    @apply grid-cols-1;
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard-grid {
+    @apply grid-cols-2;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    @apply grid-cols-3;
+  }
+}
