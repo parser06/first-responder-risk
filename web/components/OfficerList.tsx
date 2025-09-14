@@ -1,18 +1,17 @@
 'use client'
 
 import { OfficerState, RiskLevel } from '@/lib/types'
-import { 
-  User, 
-  Heart, 
-  Activity, 
-  MapPin, 
-  AlertTriangle, 
-  CheckCircle,
-  Clock,
-  Battery,
-  Wifi
-} from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import {
+  Card,
+  Elevation,
+  Icon,
+  Tag,
+  Button,
+  NonIdealState,
+  ProgressBar,
+  Intent,
+} from '@blueprintjs/core'
 
 interface OfficerListProps {
   officers: OfficerState[]
@@ -29,23 +28,13 @@ export default function OfficerList({
   onSubscribe,
   onUnsubscribe 
 }: OfficerListProps) {
-  const getRiskColor = (riskLevel: RiskLevel) => {
+  const riskIntent = (riskLevel: RiskLevel): Intent => {
     switch (riskLevel) {
-      case 'critical': return 'text-red-800 bg-red-100 border-red-300'
-      case 'high': return 'text-red-600 bg-red-50 border-red-200'
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-      case 'low': return 'text-green-600 bg-green-50 border-green-200'
-      default: return 'text-gray-600 bg-gray-50 border-gray-200'
-    }
-  }
-
-  const getRiskIcon = (riskLevel: RiskLevel) => {
-    switch (riskLevel) {
-      case 'critical': return <AlertTriangle className="h-4 w-4 text-red-800" />
-      case 'high': return <AlertTriangle className="h-4 w-4 text-red-600" />
-      case 'medium': return <AlertTriangle className="h-4 w-4 text-yellow-600" />
-      case 'low': return <CheckCircle className="h-4 w-4 text-green-600" />
-      default: return <Clock className="h-4 w-4 text-gray-600" />
+      case 'high': return Intent.DANGER
+      case 'medium': return Intent.WARNING
+      case 'low':
+      default:
+        return Intent.SUCCESS
     }
   }
 
@@ -57,75 +46,70 @@ export default function OfficerList({
     }
   }
 
-  const getBatteryColor = (batteryLevel?: number) => {
-    if (!batteryLevel) return 'text-gray-400'
-    if (batteryLevel > 0.5) return 'text-green-500'
-    if (batteryLevel > 0.2) return 'text-yellow-500'
-    return 'text-red-500'
+  const batteryIntent = (batteryLevel?: number): Intent | undefined => {
+    if (batteryLevel == null) return undefined
+    if (batteryLevel > 0.5) return Intent.SUCCESS
+    if (batteryLevel > 0.2) return Intent.WARNING
+    return Intent.DANGER
   }
 
-  const getNetworkIcon = (networkStatus?: string) => {
+  const networkIcon = (networkStatus?: string) => {
     switch (networkStatus) {
-      case 'wifi': return <Wifi className="h-4 w-4 text-green-500" />
-      case 'cellular': return <Wifi className="h-4 w-4 text-blue-500" />
-      case 'offline': return <Wifi className="h-4 w-4 text-red-500" />
-      default: return <Wifi className="h-4 w-4 text-gray-400" />
+      case 'wifi': return 'wifi'
+      case 'cellular': return 'cell-tower'
+      case 'offline': return 'offline'
+      default: return 'signal-search'
     }
   }
 
   if (officers.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500">
-        <User className="h-12 w-12 mb-4" />
-        <p className="text-lg font-medium">No Officers Active</p>
-        <p className="text-sm">Waiting for officer data...</p>
-      </div>
+      <NonIdealState
+        icon={<Icon icon="person" />}
+        title="No Officers Active"
+        description="Waiting for officer data..."
+      />
     )
   }
 
   return (
-    <div className="space-y-3">
+    <div>
       {officers.map((officer) => (
-        <div
+        <Card
           key={officer.id}
-          className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
-            selectedOfficer?.id === officer.id
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-          }`}
+          interactive
+          elevation={selectedOfficer?.id === officer.id ? Elevation.TWO : Elevation.ONE}
           onClick={() => onOfficerSelect(officer)}
+          style={{ marginBottom: 8 }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <User className="h-5 w-5 text-gray-600" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon icon="person" />
               <div>
-                <h3 className="font-semibold text-gray-900">{officer.name}</h3>
-                <p className="text-sm text-gray-600">{officer.badgeNumber}</p>
+                <div style={{ fontWeight: 600 }}>{officer.name}</div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>{officer.badgeNumber}</div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              {getRiskIcon(officer.riskLevel)}
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getRiskColor(officer.riskLevel)}`}>
-                {officer.riskLevel.toUpperCase()}
-              </span>
-            </div>
+            <Tag large intent={riskIntent(officer.riskLevel)}>
+              {officer.riskLevel.toUpperCase()}
+            </Tag>
           </div>
 
           {/* Department */}
-          <p className="text-sm text-gray-600 mb-3">{officer.department}</p>
+          <div style={{ fontSize: 12, opacity: 0.8, marginTop: 6 }}>{officer.department}</div>
 
           {/* Status Indicators */}
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="flex items-center space-x-1">
-              <Heart className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon icon="heart" />
+              <span style={{ fontSize: 12 }}>
                 {officer.heartRate ? `${officer.heartRate} BPM` : 'N/A'}
               </span>
             </div>
-            <div className="flex items-center space-x-1">
-              <Activity className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Icon icon="pulse" />
+              <span style={{ fontSize: 12 }}>
                 {officer.activityType || 'Unknown'}
               </span>
             </div>
@@ -133,9 +117,9 @@ export default function OfficerList({
 
           {/* Location */}
           {officer.latitude && officer.longitude && (
-            <div className="flex items-center space-x-1 mb-3">
-              <MapPin className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-600">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <Icon icon="map-marker" />
+              <span style={{ fontSize: 12 }}>
                 {officer.latitude.toFixed(4)}, {officer.longitude.toFixed(4)}
               </span>
             </div>
@@ -143,47 +127,47 @@ export default function OfficerList({
 
           {/* Alerts */}
           {officer.fallDetected && (
-            <div className="flex items-center space-x-1 mb-3 text-red-600">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-sm font-medium">FALL DETECTED</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <Icon icon="warning-sign" intent={Intent.DANGER} />
+              <span style={{ fontSize: 12, fontWeight: 600 }}>FALL DETECTED</span>
             </div>
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center space-x-3">
-              <span>{formatLastSeen(officer.lastSeen)}</span>
-              {officer.batteryLevel && (
-                <div className="flex items-center space-x-1">
-                  <Battery className={`h-3 w-3 ${getBatteryColor(officer.batteryLevel)}`} />
-                  <span>{Math.round(officer.batteryLevel * 100)}%</span>
-                </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, opacity: 0.8, marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span>
+                <Icon icon="time" style={{ marginRight: 4 }} />
+                {formatLastSeen(officer.lastSeen)}
+              </span>
+              {officer.batteryLevel != null && (
+                <span>
+                  <Icon icon="battery" intent={batteryIntent(officer.batteryLevel)} style={{ marginRight: 4 }} />
+                  {Math.round(officer.batteryLevel * 100)}%
+                </span>
               )}
             </div>
-            <div className="flex items-center space-x-1">
-              {getNetworkIcon(officer.networkStatus)}
+            <div>
+              <Icon icon={networkIcon(officer.networkStatus)} style={{ marginRight: 6 }} />
               <span>{officer.networkStatus || 'Unknown'}</span>
             </div>
           </div>
 
           {/* Risk Score Bar */}
-          <div className="mt-2">
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <div style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
               <span>Risk Score</span>
               <span>{Math.round(officer.riskScore * 100)}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  officer.riskLevel === 'critical' ? 'bg-red-800' :
-                  officer.riskLevel === 'high' ? 'bg-red-500' :
-                  officer.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                }`}
-                style={{ width: `${Math.min(officer.riskScore * 100, 100)}%` }}
-              />
-            </div>
+            <ProgressBar intent={riskIntent(officer.riskLevel)} value={Math.min(officer.riskScore, 1)} stripes={officer.riskLevel !== 'low'} animate={false} />
           </div>
-        </div>
+
+          {/* Subscribe/Unsubscribe */}
+          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+            <Button small icon={<Icon icon="feed" />} onClick={(e) => { e.stopPropagation(); onSubscribe(officer.id) }}>Subscribe</Button>
+            <Button small minimal icon={<Icon icon="cross" />} onClick={(e) => { e.stopPropagation(); onUnsubscribe(officer.id) }}>Unsubscribe</Button>
+          </div>
+        </Card>
       ))}
     </div>
   )

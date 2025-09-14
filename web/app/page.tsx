@@ -1,17 +1,24 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
-import { Icon } from 'leaflet'
-import { AlertTriangle, Users, Activity, MapPin, Wifi, WifiOff } from 'lucide-react'
-import OfficerList from '@/components/OfficerList'
-import AlertBanner from '@/components/AlertBanner'
-import { useLiveFeed } from '@/lib/useLiveFeed'
-import { OfficerState, RiskLevel } from '@/lib/types'
-
-// Fix for Next.js and Leaflet
-import 'leaflet/dist/leaflet.css'
 import dynamic from 'next/dynamic'
+import { useLiveFeed } from '@/lib/useLiveFeed'
+import OfficerList from '@/components/OfficerList'
+import { OfficerState, RiskLevel } from '@/lib/types'
+import {
+  Navbar,
+  NavbarGroup,
+  NavbarHeading,
+  Alignment,
+  Tag,
+  Icon,
+  Card,
+  H5,
+  H3,
+  Divider,
+  Callout,
+  Intent,
+} from '@blueprintjs/core'
 
 // Dynamically import the map to avoid SSR issues
 const MapView = dynamic(() => import('@/components/MapView'), { ssr: false })
@@ -21,13 +28,13 @@ export default function Dashboard() {
   const [selectedOfficer, setSelectedOfficer] = useState<OfficerState | null>(null)
   const [alerts, setAlerts] = useState<any[]>([])
   const [isConnected, setIsConnected] = useState(false)
-  
-  const { 
-    officers: liveOfficers, 
-    alerts: liveAlerts, 
+
+  const {
+    officers: liveOfficers,
+    alerts: liveAlerts,
     connectionStatus,
     subscribeToOfficer,
-    unsubscribeFromOfficer 
+    unsubscribeFromOfficer,
   } = useLiveFeed()
 
   useEffect(() => {
@@ -39,19 +46,9 @@ export default function Dashboard() {
     setAlerts(liveAlerts)
   }, [liveAlerts])
 
-  const getRiskColor = (riskLevel: RiskLevel) => {
-    switch (riskLevel) {
-      case 'critical': return 'text-red-800'
-      case 'high': return 'text-red-600'
-      case 'medium': return 'text-yellow-600'
-      case 'low': return 'text-green-600'
-      default: return 'text-gray-600'
-    }
-  }
-
   const getRiskCounts = () => {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 }
-    officers.forEach(officer => {
+    const counts = { high: 0, medium: 0, low: 0 }
+    officers.forEach((officer) => {
       counts[officer.riskLevel]++
     })
     return counts
@@ -60,163 +57,151 @@ export default function Dashboard() {
   const riskCounts = getRiskCounts()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <AlertTriangle className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-xl font-semibold text-gray-900">
-                First Responder Risk Monitoring
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                {isConnected ? (
-                  <Wifi className="h-5 w-5 text-green-500" />
-                ) : (
-                  <WifiOff className="h-5 w-5 text-red-500" />
-                )}
-                <span className="ml-2 text-sm text-gray-600">
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar>
+        <NavbarGroup align={Alignment.LEFT}>
+          <Icon icon="pulse" style={{ marginRight: 8 }} />
+          <NavbarHeading>First Responder Risk Monitoring</NavbarHeading>
+        </NavbarGroup>
+        <NavbarGroup align={Alignment.RIGHT}>
+          <Tag intent={isConnected ? Intent.SUCCESS : Intent.DANGER} round>
+            <Icon icon={isConnected ? 'confirm' : 'offline'} style={{ marginRight: 6 }} />
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </Tag>
+        </NavbarGroup>
+      </Navbar>
 
-      {/* Alerts Banner */}
-      {alerts.length > 0 && (
-        <div className="bg-red-50 border-b border-red-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-            {alerts.map((alert, index) => (
-              <AlertBanner key={index} alert={alert} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Alerts */}
+      <div style={{ padding: 12 }}>
+        {alerts.map((alert, index) => (
+          <Callout key={index} intent={Intent.DANGER} icon="warning-sign" title={alert.title || 'Alert'} style={{ marginBottom: 8 }}>
+            {alert.message}
+          </Callout>
+        ))}
+      </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          <div className="card">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Officers</p>
-                <p className="text-2xl font-semibold text-gray-900">{officers.length}</p>
+      <div style={{ padding: 16 }}>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 16 }}>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Icon icon="people" />
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Total Officers</div>
+                <H3 style={{ margin: 0 }}>{officers.length}</H3>
               </div>
             </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-red-900 rounded-full flex items-center justify-center">
-                <span className="text-red-100 font-bold text-sm">C</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Critical Risk</p>
-                <p className="text-2xl font-semibold text-red-800">{riskCounts.critical}</p>
+          </Card>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag large intent={Intent.DANGER} round>H</Tag>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>High Risk</div>
+                <H3 style={{ margin: 0, color: '#f55656' }}>{riskCounts.high}</H3>
               </div>
             </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                <span className="text-red-600 font-bold text-sm">H</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">High Risk</p>
-                <p className="text-2xl font-semibold text-red-600">{riskCounts.high}</p>
+          </Card>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag large intent={Intent.WARNING} round>M</Tag>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Medium Risk</div>
+                <H3 style={{ margin: 0, color: '#f2b824' }}>{riskCounts.medium}</H3>
               </div>
             </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-yellow-600 font-bold text-sm">M</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Medium Risk</p>
-                <p className="text-2xl font-semibold text-yellow-600">{riskCounts.medium}</p>
+          </Card>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Tag large intent={Intent.SUCCESS} round>L</Tag>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8 }}>Low Risk</div>
+                <H3 style={{ margin: 0, color: '#4dc27d' }}>{riskCounts.low}</H3>
               </div>
             </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                <span className="text-green-600 font-bold text-sm">L</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Low Risk</p>
-                <p className="text-2xl font-semibold text-green-600">{riskCounts.low}</p>
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
 
-        {/* Map and Officer List */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Map */}
-          <div className="lg:col-span-2">
-            <div className="card h-96">
-              <MapView 
+        {/* Main Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
+          {/* Map Card */}
+          <Card style={{ height: 800 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <H5 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                <Icon icon="map-marker" /> Officer Locations
+              </H5>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{officers.length} officers active</div>
+            </div>
+            <div style={{ height: 720 }}>
+              <MapView officers={officers} selectedOfficer={selectedOfficer} onOfficerSelect={setSelectedOfficer} />
+            </div>
+          </Card>
+
+          {/* Officer List */}
+          <Card style={{ height: 800, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <H5 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                <Icon icon="pulse" /> Officer Status
+              </H5>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>Real-time updates</div>
+            </div>
+            <div style={{ overflowY: 'auto' }}>
+              <OfficerList
                 officers={officers}
                 selectedOfficer={selectedOfficer}
                 onOfficerSelect={setSelectedOfficer}
+                onSubscribe={subscribeToOfficer}
+                onUnsubscribe={unsubscribeFromOfficer}
               />
             </div>
-          </div>
-
-          {/* Officer List */}
-          <div className="lg:col-span-1">
-            <div className="card h-96 overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Officers</h2>
-                <p className="text-sm text-gray-600">
-                  {officers.length} active officers
-                </p>
-              </div>
-              <div className="overflow-y-auto h-full">
-                <OfficerList
-                  officers={officers}
-                  selectedOfficer={selectedOfficer}
-                  onOfficerSelect={setSelectedOfficer}
-                  onSubscribe={subscribeToOfficer}
-                  onUnsubscribe={unsubscribeFromOfficer}
-                />
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
 
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <div className="card">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            </div>
-            <div className="p-4">
-              <div className="text-center text-gray-500 py-8">
-                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No recent activity to display</p>
+        {/* Officer Details */}
+        {selectedOfficer && (
+          <Card style={{ marginTop: 16 }}>
+            <H5 style={{ marginTop: 0 }}>Officer Details: {selectedOfficer.name}</H5>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Basic Info</div>
+                <div>
+                  <div><strong>Badge:</strong> {selectedOfficer.badgeNumber}</div>
+                  <div><strong>Department:</strong> {selectedOfficer.department}</div>
+                  <div>
+                    <strong>Status:</strong>
+                    <Tag minimal intent={selectedOfficer.riskLevel === 'high' ? Intent.DANGER : selectedOfficer.riskLevel === 'medium' ? Intent.WARNING : Intent.SUCCESS} style={{ marginLeft: 8 }}>
+                      {selectedOfficer.riskLevel.toUpperCase()}
+                    </Tag>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Health Data</div>
+                <div>
+                  <div><strong>Heart Rate:</strong> {selectedOfficer.heartRate || 'N/A'} BPM</div>
+                  <div><strong>Activity:</strong> {selectedOfficer.activityType || 'Unknown'}</div>
+                  <div>
+                    <strong>Fall Detected:</strong>
+                    <span style={{ marginLeft: 6, color: selectedOfficer.fallDetected ? '#f55656' : '#4dc27d', fontWeight: 600 }}>
+                      {selectedOfficer.fallDetected ? 'YES' : 'NO'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 6 }}>Location</div>
+                <div>
+                  <div><strong>Latitude:</strong> {selectedOfficer.latitude?.toFixed(6) || 'N/A'}</div>
+                  <div><strong>Longitude:</strong> {selectedOfficer.longitude?.toFixed(6) || 'N/A'}</div>
+                  <div><strong>Accuracy:</strong> {selectedOfficer.accuracy ? `${selectedOfficer.accuracy.toFixed(0)}m` : 'N/A'}</div>
+                  <div><strong>Last Update:</strong> {selectedOfficer.lastSeen}</div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      </main>
-
-      <style jsx>{`
-        .card {
-          @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
-        }
-      `}</style>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

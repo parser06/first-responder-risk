@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import { Icon, LatLngTuple } from 'leaflet'
 import { OfficerState, RiskLevel } from '@/lib/types'
 import { useEffect } from 'react'
+import { Tag, Intent, H5 } from '@blueprintjs/core'
 
 // Fix for default markers in react-leaflet
 import 'leaflet/dist/leaflet.css'
@@ -56,8 +57,8 @@ export default function MapView({ officers, selectedOfficer, onOfficerSelect }: 
       className="rounded-lg"
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; OpenStreetMap contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
       />
       
       {officersWithLocation.map((officer) => (
@@ -70,29 +71,23 @@ export default function MapView({ officers, selectedOfficer, onOfficerSelect }: 
           }}
         >
           <Popup>
-            <div className="p-2">
-              <h3 className="font-semibold text-gray-900">{officer.name}</h3>
-              <p className="text-sm text-gray-600">Badge: {officer.badgeNumber}</p>
-              <p className="text-sm text-gray-600">Department: {officer.department}</p>
-              <div className="mt-2">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium risk-${officer.riskLevel}`}>
+            <div style={{ padding: 4, minWidth: 180 }}>
+              <H5 style={{ margin: 0 }}>{officer.name}</H5>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>Badge: {officer.badgeNumber}</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>Department: {officer.department}</div>
+              <div style={{ marginTop: 6 }}>
+                <Tag small intent={officer.riskLevel === 'high' ? Intent.DANGER : officer.riskLevel === 'medium' ? Intent.WARNING : Intent.SUCCESS}>
                   {officer.riskLevel.toUpperCase()} RISK
-                </span>
+                </Tag>
               </div>
               {officer.heartRate && (
-                <p className="text-sm text-gray-600 mt-1">
-                  Heart Rate: {officer.heartRate} BPM
-                </p>
+                <div style={{ fontSize: 12, marginTop: 4 }}>Heart Rate: {officer.heartRate} BPM</div>
               )}
               {officer.activityType && (
-                <p className="text-sm text-gray-600">
-                  Activity: {officer.activityType}
-                </p>
+                <div style={{ fontSize: 12 }}>Activity: {officer.activityType}</div>
               )}
               {officer.fallDetected && (
-                <p className="text-sm text-red-600 font-medium">
-                  ⚠️ FALL DETECTED
-                </p>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#f55656' }}>FALL DETECTED</div>
               )}
             </div>
           </Popup>

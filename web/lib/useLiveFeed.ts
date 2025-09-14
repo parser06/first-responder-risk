@@ -242,13 +242,32 @@ export function useLiveFeed(): UseLiveFeedReturn {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
         
-        // Fetch officers
+        // Fetch officers and normalize to OfficerState shape
         const officersResponse = await fetch(`${apiUrl}/api/v1/ingest/officers`)
         if (officersResponse.ok) {
           const officersData = await officersResponse.json()
+<<<<<<< HEAD
           // Transform the API response to match our frontend format
           const transformedOfficers = (officersData.officers || []).map(transformApiOfficerToOfficerState)
           setOfficers(transformedOfficers)
+=======
+          const normalized = (officersData.officers || []).map((o: any) => ({
+            id: o.officer_id,
+            name: o.name,
+            badgeNumber: o.badge_number,
+            department: o.department,
+            isActive: o.is_active,
+            isOnDuty: o.is_on_duty,
+            riskLevel: o.risk_level,
+            riskScore: o.risk_score ?? 0,
+            lastSeen: o.last_seen,
+            // Defaults; live updates will enrich these
+            fallDetected: false,
+            workoutActive: false,
+            deviceId: o.device_id || '',
+          }))
+          setOfficers(normalized)
+>>>>>>> 2d6a24b (cleanup)
         }
         
         // Fetch recent alerts (if endpoint exists)

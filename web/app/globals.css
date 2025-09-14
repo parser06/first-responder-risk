@@ -9,8 +9,14 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
   }
+}
+
+/* Ensure permanent dark background when using Blueprint v6 (.bp6-dark) */
+html.bp6-dark, .bp6-dark body {
+  background-color: #111; /* gray-900 */
+  color: #e5e7eb; /* gray-200 */
 }
 
 @layer components {
@@ -31,7 +37,7 @@
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700;
   }
   
   .btn-primary {
@@ -39,7 +45,7 @@
   }
   
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors;
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100;
   }
   
   .alert-banner {
@@ -47,15 +53,15 @@
   }
   
   .alert-info {
-    @apply bg-blue-50 border-blue-400 text-blue-700;
+    @apply bg-blue-50 border-blue-400 text-blue-700 dark:bg-blue-900\/30 dark:border-blue-500 dark:text-blue-200;
   }
   
   .alert-warning {
-    @apply bg-yellow-50 border-yellow-400 text-yellow-700;
+    @apply bg-yellow-50 border-yellow-400 text-yellow-700 dark:bg-yellow-900\/30 dark:border-yellow-500 dark:text-yellow-200;
   }
   
   .alert-error {
-    @apply bg-red-50 border-red-400 text-red-700;
+    @apply bg-red-50 border-red-400 text-red-700 dark:bg-red-900\/30 dark:border-red-500 dark:text-red-200;
   }
 }
 
@@ -64,6 +70,22 @@
   height: 100%;
   width: 100%;
   border-radius: 0.5rem;
+}
+
+/* Dark theme tweaks for Leaflet UI */
+.bp6-dark .leaflet-container .leaflet-popup-content-wrapper {
+  background-color: #1f2937; /* gray-800 */
+  color: #e5e7eb; /* gray-200 */
+  border: 1px solid #374151; /* gray-700 */
+}
+
+.bp6-dark .leaflet-container .leaflet-popup-tip {
+  background-color: #1f2937; /* gray-800 */
+}
+
+.bp6-dark .leaflet-container .leaflet-control-attribution {
+  background: rgba(17, 24, 39, 0.6); /* gray-900/60 */
+  color: #9ca3af; /* gray-400 */
 }
 
 /* Custom marker styles */

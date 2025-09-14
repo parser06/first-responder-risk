@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import '@blueprintjs/core/lib/css/blueprint.css'
+import '@blueprintjs/icons/lib/css/blueprint-icons.css'
 import './globals.css'
+import BlueprintSetup from '@/components/ui/BlueprintSetup'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,9 +18,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-gray-50">
+    <html lang="en" className="bp6-dark">
+      <body className={`${inter.className}`}>
+        <BlueprintSetup />
+        <div className="min-h-screen">
           {children}
         </div>
       </body>
