@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { useLiveFeed } from '@/lib/useLiveFeed'
 import OfficerList from '@/components/OfficerList'
@@ -18,6 +18,9 @@ import {
   Divider,
   Callout,
   Intent,
+  Position,
+  OverlayToaster,
+  Button,
 } from '@blueprintjs/core'
 
 // Dynamically import the map to avoid SSR issues
@@ -28,13 +31,15 @@ export default function Dashboard() {
   const [selectedOfficer, setSelectedOfficer] = useState<OfficerState | null>(null)
   const [alerts, setAlerts] = useState<any[]>([])
   const [isConnected, setIsConnected] = useState(false)
+  const [alertMode, setAlertMode] = useState(false)
+  const [alertRadius, setAlertRadius] = useState<number>(300)
+  const [highlightedIds, setHighlightedIds] = useState<string[]>([])
+  const toasterRef = useRef<any>(null)
 
   const {
     officers: liveOfficers,
     alerts: liveAlerts,
     connectionStatus,
-    subscribeToOfficer,
-    unsubscribeFromOfficer,
   } = useLiveFeed()
 
   useEffect(() => {
@@ -74,6 +79,7 @@ export default function Dashboard() {
 
       {/* Alerts */}
       <div style={{ padding: 12 }}>
+        <OverlayToaster position={Position.TOP} ref={toasterRef} />
         {alerts.map((alert, index) => (
           <Callout key={index} intent={Intent.DANGER} icon="warning-sign" title={alert.title || 'Alert'} style={{ marginBottom: 8 }}>
             {alert.message}
@@ -126,20 +132,79 @@ export default function Dashboard() {
         {/* Main Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16 }}>
           {/* Map Card */}
-          <Card style={{ height: 800 }}>
+          <Card style={{ height: 680 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <H5 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                 <Icon icon="map-marker" /> Officer Locations
               </H5>
               <div style={{ fontSize: 12, opacity: 0.8 }}>{officers.length} officers active</div>
             </div>
-            <div style={{ height: 720 }}>
-              <MapView officers={officers} selectedOfficer={selectedOfficer} onOfficerSelect={setSelectedOfficer} />
+            {alertMode && selectedOfficer && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <Icon icon="warning-sign" />
+                <span style={{ fontSize: 12, opacity: 0.9 }}>Alert officers within radius (meters):</span>
+                <input
+                  type="range"
+                  min={50}
+                  max={2000}
+                  step={50}
+                  value={alertRadius}
+                  onChange={(e) => setAlertRadius(parseInt(e.target.value, 10))}
+                  style={{ width: 240 }}
+                />
+                <Tag minimal>{alertRadius} m</Tag>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                  <Button minimal onClick={() => setAlertMode(false)}>Cancel</Button>
+                  <Button
+                    intent={Intent.DANGER}
+                    onClick={async () => {
+                      try {
+                        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'
+                        const res = await fetch(`${apiUrl}/api/alerts/nearby`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            sourceOfficerId: selectedOfficer.id,
+                            radiusMeters: alertRadius,
+                            title: 'Officer Down',
+                            message: `Assist ${selectedOfficer.name}`,
+                          })
+                        })
+                        if (res.ok) {
+                          const data = await res.json()
+                          const targets: string[] = data.targets || []
+                          setHighlightedIds(targets)
+                          toasterRef.current?.show({ message: `${targets.length} officer(s) alerted`, intent: Intent.WARNING, timeout: 3000 })
+                          setTimeout(() => setHighlightedIds([]), 10000)
+                        }
+                        setAlertMode(false)
+                      } catch (e) {
+                        console.error('Alert create error', e)
+                      }
+                    }}
+                  >
+                    Send Alert
+                  </Button>
+                </div>
+              </div>
+            )}
+            <div style={{ height: 600 }}>
+              <MapView
+                officers={officers}
+                selectedOfficer={selectedOfficer}
+                onOfficerSelect={setSelectedOfficer}
+                alertCircle={alertMode && selectedOfficer && selectedOfficer.latitude && selectedOfficer.longitude ? {
+                  center: [selectedOfficer.latitude, selectedOfficer.longitude],
+                  radiusMeters: alertRadius,
+                } : null}
+                highlightedIds={highlightedIds}
+                onStartAlert={(officer) => { setSelectedOfficer(officer); setAlertMode(true) }}
+              />
             </div>
           </Card>
 
           {/* Officer List */}
-          <Card style={{ height: 800, display: 'flex', flexDirection: 'column' }}>
+          <Card style={{ height: 680, display: 'flex', flexDirection: 'column' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <H5 style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
                 <Icon icon="pulse" /> Officer Status
@@ -151,8 +216,7 @@ export default function Dashboard() {
                 officers={officers}
                 selectedOfficer={selectedOfficer}
                 onOfficerSelect={setSelectedOfficer}
-                onSubscribe={subscribeToOfficer}
-                onUnsubscribe={unsubscribeFromOfficer}
+                onAlertNearby={(officer) => { setSelectedOfficer(officer); setAlertMode(true) }}
               />
             </div>
           </Card>

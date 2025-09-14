@@ -42,11 +42,18 @@ This system monitors first responders in real-time using:
    make dev-up
    ```
 
-2. **Start Backend Server**
+2. **Start Backend Server (Flask + SQLite, Demo)**
    ```bash
    cd server
    pip install -r requirements.txt
-   uvicorn app.main:app --reload
+   python app.py
+   # or: FLASK_APP=app.py flask run -p 8000 -h 0.0.0.0
+   ```
+
+   Optional: seed demo data
+   ```bash
+   curl -X POST http://localhost:8000/api/dev/reset
+   curl -X POST http://localhost:8000/api/dev/seed
    ```
 
 3. **Start Web Dashboard**
@@ -66,7 +73,7 @@ This system monitors first responders in real-time using:
 
 ```
 first-responder-risk/
-├── server/          # FastAPI backend with WebSocket
+├── server/          # Flask demo backend (SQLite, server/app.py)
 ├── web/            # Next.js dashboard with map
 ├── mobile/         # iOS + watchOS apps
 ├── ml/             # Risk scoring models and training
@@ -77,13 +84,9 @@ first-responder-risk/
 
 ## 🔧 Key Features
 
-- **Real-time Health Monitoring**: Heart rate, HRV, motion analysis
-- **Fall Detection**: Accelerometer-based fall event detection
-- **Geolocation Tracking**: GPS coordinates with accuracy filtering
-- **Risk Scoring**: Multi-factor risk assessment (low/medium/high)
-- **Emergency Alerts**: Haptic feedback and push notifications
-- **Command Dashboard**: Live map view of all officers
-- **Offline Resilience**: Data buffering when network is unavailable
+- Demo-focused: iOS/watch app can POST officer snapshots to `/api/officers/upsert`.
+- Dashboard polls `/api/officers` every 3s and displays current officer status on a map and list.
+- SQLite database file (`server_demo.db`) created automatically on first run.
 
 ## 📊 Risk Assessment Factors
 

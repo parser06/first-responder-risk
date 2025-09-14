@@ -69,7 +69,6 @@ html.bp6-dark, .bp6-dark body {
 .leaflet-container {
   height: 100%;
   width: 100%;
-  border-radius: 0.5rem;
 }
 
 /* Dark theme tweaks for Leaflet UI */
@@ -77,15 +76,52 @@ html.bp6-dark, .bp6-dark body {
   background-color: #1f2937; /* gray-800 */
   color: #e5e7eb; /* gray-200 */
   border: 1px solid #374151; /* gray-700 */
+  border-radius: 0 !important; /* match Blueprint squared look */
+  box-shadow: none; /* reduce emphasis to match app style */
 }
 
 .bp6-dark .leaflet-container .leaflet-popup-tip {
   background-color: #1f2937; /* gray-800 */
+  border-radius: 0 !important;
 }
 
 .bp6-dark .leaflet-container .leaflet-control-attribution {
   background: rgba(17, 24, 39, 0.6); /* gray-900/60 */
   color: #9ca3af; /* gray-400 */
+}
+
+/* Small alert badge overlay for highlighted officers */
+.alert-badge {
+  background: #f59e0b; /* amber-500 */
+  color: #111827; /* gray-900 */
+  border: 2px solid #ffffff;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 12px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.2);
+}
+
+/* Blueprint button shape: square corners by default */
+.bp6-button,
+.bp6-button.bp6-large,
+.bp6-button.bp6-small,
+.bp6-dark .bp6-button,
+.bp5-button,
+.bp5-dark .bp5-button {
+  border-radius: 0 !important;
+}
+
+/* Keep button groups squared too */
+.bp6-button-group .bp6-button,
+.bp5-button-group .bp5-button {
+  border-radius: 0 !important;
 }
 
 /* Custom marker styles */
