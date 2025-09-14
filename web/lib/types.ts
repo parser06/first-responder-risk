@@ -1,6 +1,6 @@
 // Type definitions for the First Responder Risk Monitoring system
 
-export type RiskLevel = 'low' | 'medium' | 'high'
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
 
 export type EventType = 
   | 'high_risk' 

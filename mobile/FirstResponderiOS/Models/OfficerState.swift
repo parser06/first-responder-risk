@@ -93,7 +93,7 @@ struct RiskEvent: Codable, Identifiable {
     let isAcknowledged: Bool
     let isResolved: Bool
     let location: LocationData?
-    let metadata: [String: Any]?
+    let metadata: EventMetadata?
     
     enum CodingKeys: String, CodingKey {
         case id, officerId, eventType, riskLevel, riskScore, description
@@ -146,4 +146,30 @@ struct DashboardStats: Codable {
     let lowRiskOfficers: Int
     let activeAlerts: Int
     let lastUpdate: String
+}
+
+// MARK: - API Response Models
+
+struct OfficerListResponse: Codable {
+    let officers: [OfficerResponse]
+    let totalCount: Int
+    let lastUpdate: String
+}
+
+struct OfficerResponse: Codable, Identifiable {
+    let id: String
+    let badgeNumber: String
+    let name: String
+    let department: String
+    let phone: String
+    let email: String
+    let isActive: Bool
+    let isOnDuty: Bool
+    let currentRiskLevel: RiskLevel
+    let currentRiskScore: Double
+    let deviceId: String
+    let appVersion: String
+    let lastSeen: String
+    let createdAt: String
+    let updatedAt: String
 }

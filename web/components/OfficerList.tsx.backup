@@ -31,7 +31,6 @@ export default function OfficerList({
 }: OfficerListProps) {
   const getRiskColor = (riskLevel: RiskLevel) => {
     switch (riskLevel) {
-      case 'critical': return 'text-red-800 bg-red-100 border-red-300'
       case 'high': return 'text-red-600 bg-red-50 border-red-200'
       case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
       case 'low': return 'text-green-600 bg-green-50 border-green-200'
@@ -41,7 +40,6 @@ export default function OfficerList({
 
   const getRiskIcon = (riskLevel: RiskLevel) => {
     switch (riskLevel) {
-      case 'critical': return <AlertTriangle className="h-4 w-4 text-red-800" />
       case 'high': return <AlertTriangle className="h-4 w-4 text-red-600" />
       case 'medium': return <AlertTriangle className="h-4 w-4 text-yellow-600" />
       case 'low': return <CheckCircle className="h-4 w-4 text-green-600" />
@@ -175,7 +173,6 @@ export default function OfficerList({
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  officer.riskLevel === 'critical' ? 'bg-red-800' :
                   officer.riskLevel === 'high' ? 'bg-red-500' :
                   officer.riskLevel === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
                 }`}

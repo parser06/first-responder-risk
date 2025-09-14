@@ -41,7 +41,6 @@ export default function Dashboard() {
 
   const getRiskColor = (riskLevel: RiskLevel) => {
     switch (riskLevel) {
-      case 'critical': return 'text-red-800'
       case 'high': return 'text-red-600'
       case 'medium': return 'text-yellow-600'
       case 'low': return 'text-green-600'
@@ -50,7 +49,7 @@ export default function Dashboard() {
   }
 
   const getRiskCounts = () => {
-    const counts = { critical: 0, high: 0, medium: 0, low: 0 }
+    const counts = { high: 0, medium: 0, low: 0 }
     officers.forEach(officer => {
       counts[officer.riskLevel]++
     })
@@ -101,25 +100,13 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="card">
             <div className="flex items-center">
               <Users className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Officers</p>
                 <p className="text-2xl font-semibold text-gray-900">{officers.length}</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="card">
-            <div className="flex items-center">
-              <div className="h-8 w-8 bg-red-900 rounded-full flex items-center justify-center">
-                <span className="text-red-100 font-bold text-sm">C</span>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Critical Risk</p>
-                <p className="text-2xl font-semibold text-red-800">{riskCounts.critical}</p>
               </div>
             </div>
           </div>
@@ -161,30 +148,44 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Map and Officer List */}
+        {/* Main Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Map */}
+          {/* Map View */}
           <div className="lg:col-span-2">
             <div className="card h-96">
-              <MapView 
-                officers={officers}
-                selectedOfficer={selectedOfficer}
-                onOfficerSelect={setSelectedOfficer}
-              />
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <MapPin className="h-5 w-5 mr-2" />
+                  Officer Locations
+                </h2>
+                <div className="text-sm text-gray-500">
+                  {officers.length} officers active
+                </div>
+              </div>
+              <div className="h-80">
+                <MapView 
+                  officers={officers}
+                  selectedOfficer={selectedOfficer}
+                  onOfficerSelect={setSelectedOfficer}
+                />
+              </div>
             </div>
           </div>
 
           {/* Officer List */}
           <div className="lg:col-span-1">
-            <div className="card h-96 overflow-hidden">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Officers</h2>
-                <p className="text-sm text-gray-600">
-                  {officers.length} active officers
-                </p>
+            <div className="card h-96">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Activity className="h-5 w-5 mr-2" />
+                  Officer Status
+                </h2>
+                <div className="text-sm text-gray-500">
+                  Real-time updates
+                </div>
               </div>
-              <div className="overflow-y-auto h-full">
-                <OfficerList
+              <div className="h-80 overflow-y-auto">
+                <OfficerList 
                   officers={officers}
                   selectedOfficer={selectedOfficer}
                   onOfficerSelect={setSelectedOfficer}
@@ -196,27 +197,52 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <div className="card">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            </div>
-            <div className="p-4">
-              <div className="text-center text-gray-500 py-8">
-                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No recent activity to display</p>
+        {/* Officer Details */}
+        {selectedOfficer && (
+          <div className="mt-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Officer Details: {selectedOfficer.name}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Basic Info</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Badge:</span> {selectedOfficer.badgeNumber}</p>
+                    <p><span className="font-medium">Department:</span> {selectedOfficer.department}</p>
+                    <p><span className="font-medium">Status:</span> 
+                      <span className={`ml-2 ${getRiskColor(selectedOfficer.riskLevel)}`}>
+                        {selectedOfficer.riskLevel.toUpperCase()}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Health Data</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Heart Rate:</span> {selectedOfficer.heartRate || 'N/A'} BPM</p>
+                    <p><span className="font-medium">Activity:</span> {selectedOfficer.activityType || 'Unknown'}</p>
+                    <p><span className="font-medium">Fall Detected:</span> 
+                      <span className={`ml-2 ${selectedOfficer.fallDetected ? 'text-red-600' : 'text-green-600'}`}>
+                        {selectedOfficer.fallDetected ? 'YES' : 'NO'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-600 mb-2">Location</h4>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Latitude:</span> {selectedOfficer.latitude?.toFixed(6) || 'N/A'}</p>
+                    <p><span className="font-medium">Longitude:</span> {selectedOfficer.longitude?.toFixed(6) || 'N/A'}</p>
+                    <p><span className="font-medium">Accuracy:</span> {selectedOfficer.accuracy ? `${selectedOfficer.accuracy.toFixed(0)}m` : 'N/A'}</p>
+                    <p><span className="font-medium">Last Update:</span> {selectedOfficer.lastSeen}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
-
-      <style jsx>{`
-        .card {
-          @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
-        }
-      `}</style>
     </div>
   )
 }

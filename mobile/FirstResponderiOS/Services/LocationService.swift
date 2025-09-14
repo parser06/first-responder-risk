@@ -1,56 +1,54 @@
 """
 Location Service for First Responder Risk Monitoring
-Handles GPS location tracking and updates
+Handles GPS location tracking and permissions
 """
 
 import Foundation
 import CoreLocation
 import Combine
 
-class LocationService: NSObject, ObservableObject {
+class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationService()
     
     private let locationManager = CLLocationManager()
     
     @Published var currentLocation: CLLocation?
-    @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
-    @Published var isLocationEnabled = false
-    @Published var locationError: String?
+    @Published var authorizationStatus: CLAuthorizationStatus
+    @Published var isLocationEnabled: Bool = false
+    @Published var lastError: String?
     
-    private override init() {
+    private init() {
+        self.authorizationStatus = locationManager.authorizationStatus
         super.init()
-        setupLocationManager()
-    }
-    
-    private func setupLocationManager() {
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 10 // Update every 10 meters
+        locationManager.distanceFilter = 10.0 // Update every 10 meters
     }
+    
+    // MARK: - Public Methods
     
     func requestLocationPermission() {
         switch authorizationStatus {
         case .notDetermined:
             locationManager.requestWhenInUseAuthorization()
         case .denied, .restricted:
-            // Handle denied permission
-            locationError = "Location permission denied. Please enable in Settings."
+            lastError = "Location access denied. Please enable in Settings."
         case .authorizedWhenInUse, .authorizedAlways:
             startLocationUpdates()
         @unknown default:
-            break
+            lastError = "Unknown location authorization status"
         }
     }
     
     func startLocationUpdates() {
         guard authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways else {
-            requestLocationPermission()
+            lastError = "Location permission not granted"
             return
         }
         
         locationManager.startUpdatingLocation()
         isLocationEnabled = true
-        locationError = nil
+        lastError = nil
     }
     
     func stopLocationUpdates() {
@@ -58,37 +56,15 @@ class LocationService: NSObject, ObservableObject {
         isLocationEnabled = false
     }
     
-    func getCurrentLocation() -> CLLocation? {
-        return currentLocation
-    }
+    // MARK: - CLLocationManagerDelegate
     
-    func getLocationData() -> LocationData? {
-        guard let location = currentLocation else { return nil }
-        
-        return LocationData(
-            latitude: location.coordinate.latitude,
-            longitude: location.coordinate.longitude,
-            altitude: location.altitude,
-            accuracy: location.horizontalAccuracy,
-            horizontalAccuracy: location.horizontalAccuracy,
-            verticalAccuracy: location.verticalAccuracy,
-            speed: location.speed >= 0 ? location.speed : nil,
-            course: location.course >= 0 ? location.course : nil,
-            courseAccuracy: location.courseAccuracy >= 0 ? location.courseAccuracy : nil
-        )
-    }
-}
-
-// MARK: - CLLocationManagerDelegate
-
-extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
         currentLocation = location
-        locationError = nil
+        lastError = nil
         
-        // Post notification for location update
+        // Post notification for other parts of the app
         NotificationCenter.default.post(
             name: .locationUpdated,
             object: nil,
@@ -97,7 +73,7 @@ extension LocationService: CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        locationError = error.localizedDescription
+        lastError = error.localizedDescription
         print("Location error: \(error.localizedDescription)")
     }
     
@@ -108,28 +84,14 @@ extension LocationService: CLLocationManagerDelegate {
         case .authorizedWhenInUse, .authorizedAlways:
             startLocationUpdates()
         case .denied, .restricted:
-            isLocationEnabled = false
-            locationError = "Location access denied"
+            stopLocationUpdates()
+            lastError = "Location access denied"
         case .notDetermined:
             break
         @unknown default:
             break
         }
     }
-}
-
-// MARK: - Location Data Model
-
-struct LocationData: Codable {
-    let latitude: Double
-    let longitude: Double
-    let altitude: Double?
-    let accuracy: Double?
-    let horizontalAccuracy: Double?
-    let verticalAccuracy: Double?
-    let speed: Double?
-    let course: Double?
-    let courseAccuracy: Double?
 }
 
 // MARK: - Notifications

@@ -27,6 +27,22 @@ struct HeartRatePayload: Codable {
         self.metadata = metadata
     }
     
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        officerId = try container.decode(String.self, forKey: .officerId)
+        heartRate = try container.decode(Double.self, forKey: .heartRate)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        confidence = try container.decode(Double.self, forKey: .confidence)
+        source = try container.decode(String.self, forKey: .source)
+        
+        // Handle metadata decoding
+        if let metadataData = try container.decodeIfPresent(Data.self, forKey: .metadata) {
+            metadata = try JSONSerialization.jsonObject(with: metadataData) as? [String: Any]
+        } else {
+            metadata = nil
+        }
+    }
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(officerId, forKey: .officerId)
@@ -34,7 +50,14 @@ struct HeartRatePayload: Codable {
         try container.encode(ISO8601DateFormatter().string(from: timestamp), forKey: .timestamp)
         try container.encode(confidence, forKey: .confidence)
         try container.encode(source, forKey: .source)
-        try container.encodeIfPresent(metadata, forKey: .metadata)
+        
+        // Handle metadata encoding
+        if let metadata = metadata {
+            let metadataData = try JSONSerialization.data(withJSONObject: metadata)
+            try container.encode(metadataData, forKey: .metadata)
+        } else {
+            try container.encodeNil(forKey: .metadata)
+        }
     }
 }
 
@@ -63,18 +86,14 @@ struct MotionPayload: Codable {
 
 // MARK: - Location Data
 
-struct LocationPayload: Codable {
-    let officerId: String
+struct LocationData: Codable {
     let latitude: Double
     let longitude: Double
-    let altitude: Double?
     let accuracy: Double?
-    let horizontalAccuracy: Double?
-    let verticalAccuracy: Double?
     let speed: Double?
     let course: Double?
-    let courseAccuracy: Double?
-    let timestamp: Date
+    let altitude: Double?
+    let timestamp: String?
 }
 
 // MARK: - Workout Data
@@ -158,11 +177,31 @@ struct WebSocketMessage: Codable {
         self.data = data
     }
     
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        timestamp = try container.decode(Date.self, forKey: .timestamp)
+        
+        // Handle data decoding
+        if let dataData = try container.decodeIfPresent(Data.self, forKey: .data) {
+            data = try JSONSerialization.jsonObject(with: dataData) as? [String: Any]
+        } else {
+            data = nil
+        }
+    }
+    
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(type, forKey: .type)
         try container.encode(ISO8601DateFormatter().string(from: timestamp), forKey: .timestamp)
-        try container.encodeIfPresent(data, forKey: .data)
+        
+        // Handle data encoding
+        if let data = data {
+            let dataData = try JSONSerialization.data(withJSONObject: data)
+            try container.encode(dataData, forKey: .data)
+        } else {
+            try container.encodeNil(forKey: .data)
+        }
     }
 }
 
@@ -196,4 +235,71 @@ struct SystemAlertMessage: Codable {
     let message: String
     let officerId: String?
     let timestamp: Date
+}
+
+// MARK: - Event Metadata
+
+struct EventMetadata: Codable {
+    let heartRate: Double?
+    let activityType: String?
+    let confidence: Double?
+    let duration: Double?
+    let additionalInfo: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case heartRate, activityType, confidence, duration, additionalInfo
+    }
+}
+
+// MARK: - API Request/Response Models
+
+struct IngestDataRequest: Codable {
+    let officerId: String
+    let deviceId: String
+    let timestamp: String
+    let sensorData: SensorData
+    let locationData: LocationData
+}
+
+struct SensorData: Codable {
+    let heartRate: Double?
+    let heartRateVariability: Double?
+    let activityType: String?
+    let activityConfidence: Double?
+    let fallDetected: Bool
+    let fallConfidence: Double?
+    let workoutActive: Bool
+    let batteryLevel: Double?
+    let networkStatus: String?
+}
+
+struct RiskEventCreate: Codable {
+    let officerId: String
+    let eventType: String
+    let riskLevel: String
+    let riskScore: Double
+    let description: String?
+    let location: LocationData?
+    let metadata: EventMetadata?
+}
+
+struct OfficerProfileRequest: Codable {
+    let officerId: String
+    let maxHeartRate: Double?
+    let restingHeartRate: Double?
+    let age: Int?
+    let weight: Double?
+    let height: Double?
+    let fitnessLevel: String?
+}
+
+struct OfficerProfileResponse: Codable {
+    let officerId: String
+    let maxHeartRate: Double?
+    let restingHeartRate: Double?
+    let age: Int?
+    let weight: Double?
+    let height: Double?
+    let fitnessLevel: String?
+    let lastUpdated: String
 }

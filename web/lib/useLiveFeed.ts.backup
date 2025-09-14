@@ -12,43 +12,6 @@ interface UseLiveFeedReturn {
   sendMessage: (message: any) => void
 }
 
-// Transform API response (snake_case) to frontend format (camelCase)
-function transformApiOfficerToOfficerState(apiOfficer: any): OfficerState {
-  return {
-    id: apiOfficer.officer_id,
-    name: apiOfficer.name,
-    badgeNumber: apiOfficer.badge_number,
-    department: apiOfficer.department,
-    isActive: apiOfficer.is_active ?? true,
-    isOnDuty: apiOfficer.is_on_duty ?? true,
-    riskLevel: apiOfficer.risk_level || 'low',
-    riskScore: apiOfficer.risk_score || 0.0,
-    lastSeen: apiOfficer.last_seen,
-    
-    // Health data (with defaults for missing fields)
-    heartRate: apiOfficer.heart_rate,
-    heartRateVariability: apiOfficer.heart_rate_variability,
-    activityType: apiOfficer.activity_type,
-    activityConfidence: apiOfficer.activity_confidence,
-    fallDetected: apiOfficer.fall_detected || false,
-    fallConfidence: apiOfficer.fall_confidence,
-    workoutActive: apiOfficer.workout_active || false,
-    
-    // Location data
-    latitude: apiOfficer.latitude,
-    longitude: apiOfficer.longitude,
-    accuracy: apiOfficer.accuracy,
-    speed: apiOfficer.speed,
-    course: apiOfficer.course,
-    
-    // Device info
-    deviceId: apiOfficer.device_id || '',
-    appVersion: apiOfficer.app_version,
-    batteryLevel: apiOfficer.battery_level,
-    networkStatus: apiOfficer.network_status
-  }
-}
-
 export function useLiveFeed(): UseLiveFeedReturn {
   const [officers, setOfficers] = useState<OfficerState[]>([])
   const [alerts, setAlerts] = useState<(RiskEvent | SystemAlert)[]>([])
@@ -141,11 +104,17 @@ export function useLiveFeed(): UseLiveFeedReturn {
           if (officerIndex >= 0) {
             updatedOfficers[officerIndex] = {
               ...updatedOfficers[officerIndex],
-              ...transformApiOfficerToOfficerState(message.data)
+              ...message.data,
+              id: message.data.officer_id
             }
           } else {
             // New officer
-            updatedOfficers.push(transformApiOfficerToOfficerState(message.data))
+            updatedOfficers.push({
+              ...message.data,
+              id: message.data.officer_id,
+              fallDetected: false,
+              workoutActive: false
+            })
           }
           
           return updatedOfficers
@@ -246,9 +215,7 @@ export function useLiveFeed(): UseLiveFeedReturn {
         const officersResponse = await fetch(`${apiUrl}/api/v1/ingest/officers`)
         if (officersResponse.ok) {
           const officersData = await officersResponse.json()
-          // Transform the API response to match our frontend format
-          const transformedOfficers = (officersData.officers || []).map(transformApiOfficerToOfficerState)
-          setOfficers(transformedOfficers)
+          setOfficers(officersData.officers || [])
         }
         
         // Fetch recent alerts (if endpoint exists)
