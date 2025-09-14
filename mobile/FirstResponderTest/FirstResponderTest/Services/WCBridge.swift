@@ -1,7 +1,7 @@
-"""
+/*
 Watch Connectivity Bridge for First Responder Risk Monitoring
 Handles communication between iPhone and Apple Watch
-"""
+*/
 
 import Foundation
 import WatchConnectivity

@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgis/postgis:15-3.3
+    image: postgres:15
     container_name: first_responder_postgres
     environment:
       POSTGRES_DB: first_responder_risk
@@ -12,7 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./initdb:/docker-entrypoint-initdb.d
     networks:
       - first_responder_network
 
@@ -23,20 +20,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - first_responder_network
-
-  # Optional: pgAdmin for database management
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: first_responder_pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@firstresponder.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-    ports:
-      - "5050:80"
-    depends_on:
-      - postgres
     networks:
       - first_responder_network
 

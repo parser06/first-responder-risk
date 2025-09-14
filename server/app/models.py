@@ -1,21 +1,20 @@
 """
-SQLAlchemy models for the First Responder Risk Monitoring system
+SQLAlchemy models for the First Responder Risk Monitoring system (SQLite compatible)
 """
 
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
 from datetime import datetime
 
-from app.db import Base
+from app.db_simple import Base
 
 class Officer(Base):
     """Officer information and status"""
     __tablename__ = "officers"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     badge_number = Column(String(50), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
     department = Column(String(100), nullable=False)
@@ -48,8 +47,8 @@ class HealthData(Base):
     """Health sensor data from Apple Watch"""
     __tablename__ = "health_data"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    officer_id = Column(UUID(as_uuid=True), ForeignKey("officers.id"), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    officer_id = Column(String(36), ForeignKey("officers.id"), nullable=False)
     
     # Heart rate data
     heart_rate = Column(Float)
@@ -77,7 +76,7 @@ class HealthData(Base):
     workout_duration = Column(Integer)  # seconds
     
     # Raw sensor data (JSON)
-    raw_sensor_data = Column(JSONB)
+    raw_sensor_data = Column(JSON)
     
     # Timestamps
     recorded_at = Column(DateTime, default=func.now(), index=True)
@@ -90,8 +89,8 @@ class LocationData(Base):
     """GPS location data from iPhone"""
     __tablename__ = "location_data"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    officer_id = Column(UUID(as_uuid=True), ForeignKey("officers.id"), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    officer_id = Column(String(36), ForeignKey("officers.id"), nullable=False)
     
     # Location coordinates
     latitude = Column(Float, nullable=False)
@@ -119,8 +118,8 @@ class RiskEvent(Base):
     """Risk events and alerts"""
     __tablename__ = "risk_events"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    officer_id = Column(UUID(as_uuid=True), ForeignKey("officers.id"), nullable=False)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    officer_id = Column(String(36), ForeignKey("officers.id"), nullable=False)
     
     # Event details
     event_type = Column(String(50), nullable=False)  # high_risk, fall_detected, sos, etc.
@@ -129,7 +128,7 @@ class RiskEvent(Base):
     
     # Event data
     description = Column(Text)
-    metadata = Column(JSONB)  # Additional event-specific data
+    event_metadata = Column(JSON)  # Additional event-specific data (renamed from metadata)
     
     # Location at time of event
     latitude = Column(Float)
@@ -154,7 +153,7 @@ class SystemAlert(Base):
     """System-wide alerts and notifications"""
     __tablename__ = "system_alerts"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     
     # Alert details
     alert_type = Column(String(50), nullable=False)  # officer_down, system_error, etc.
@@ -163,8 +162,8 @@ class SystemAlert(Base):
     message = Column(Text, nullable=False)
     
     # Related data
-    officer_id = Column(UUID(as_uuid=True), ForeignKey("officers.id"))
-    risk_event_id = Column(UUID(as_uuid=True), ForeignKey("risk_events.id"))
+    officer_id = Column(String(36), ForeignKey("officers.id"))
+    risk_event_id = Column(String(36), ForeignKey("risk_events.id"))
     
     # Status
     is_active = Column(Boolean, default=True)

@@ -1,7 +1,7 @@
-"""
+/*
 API Client for First Responder Risk Monitoring
 Handles communication with the backend server
-"""
+*/
 
 import Foundation
 import Combine

@@ -167,3 +167,6 @@ class WebSocketManager:
                 for i, (conn, metadata) in enumerate(self.connection_metadata.items())
             }
         }
+
+# Global WebSocket manager instance
+websocket_manager = WebSocketManager()

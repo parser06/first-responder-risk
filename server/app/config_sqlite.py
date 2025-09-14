@@ -1,5 +1,5 @@
 """
-Configuration settings for the First Responder Risk Monitoring API
+Configuration settings for the First Responder Risk Monitoring API (SQLite version)
 """
 
 from pydantic_settings import BaseSettings
@@ -9,7 +9,7 @@ import os
 class Settings(BaseSettings):
     """Application settings"""
     
-    # Database (SQLite for local development, PostgreSQL for production)
+    # Database (SQLite for local development)
     DATABASE_URL: str = "sqlite:///./first_responder_risk.db"
     REDIS_URL: str = "redis://localhost:6379"
     

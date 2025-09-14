@@ -1,7 +1,7 @@
-"""
+/*
 Location Service for First Responder Risk Monitoring
 Handles GPS location tracking and updates
-"""
+*/
 
 import Foundation
 import CoreLocation
@@ -137,3 +137,4 @@ struct LocationData: Codable {
 extension Notification.Name {
     static let locationUpdated = Notification.Name("locationUpdated")
 }
+
